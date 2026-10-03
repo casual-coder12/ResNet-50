@@ -95,7 +95,7 @@ class ResNetTrainer:
         path_to_save_checkpoint = os.path.join("saved_models", f"resnet50_{dataset_name}_best_model.keras")
 
         # Set up CSV logger to log training history to a CSV file
-        csv_logger = CSVLogger(path_to_save_history, append=True)
+        csv_logger = CSVLogger(path_to_save_history, append=load_checkpoint)
 
         # Set up ModelCheckpoint to save the best model based on validation loss
         checkpoint = ModelCheckpoint(
