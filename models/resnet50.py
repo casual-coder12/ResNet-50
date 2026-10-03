@@ -74,24 +74,26 @@ def ResNet50(input_shape, num_classes):
     # Resize the input to 128x128
     # X = layers.Resizing(128, 128)(X_input)
 
-    if input_shape[0] >= 128:
-        data_augmentation = tf.keras.Sequential([
-            layers.RandomFlip("horizontal"),
-            layers.RandomRotation(0.05),
-            layers.RandomTranslation(0.05, 0.05),
-        ])
-    else:
-        data_augmentation = tf.keras.Sequential([
-            layers.RandomCrop(32, 32),
-            layers.RandomFlip("horizontal"),
-            layers.RandomRotation(0.05),
-            layers.RandomTranslation(0.1, 0.1),
-        ])
+    # if input_shape[0] >= 128:
+    #     data_augmentation = tf.keras.Sequential([
+    #         layers.RandomFlip("horizontal"),
+    #         layers.RandomRotation(0.05),
+    #         layers.RandomTranslation(0.05, 0.05),
+    #     ])
+    # else:
+    #     data_augmentation = tf.keras.Sequential([
+    #         layers.RandomCrop(32, 32),
+    #         layers.RandomFlip("horizontal"),
+    #         layers.RandomRotation(0.05),
+    #         layers.RandomTranslation(0.1, 0.1),
+    #     ])
+
+    data_augmentation = tf.keras.Sequential([
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.02),
+    ])
 
     X = data_augmentation(X_input)
-
-    # Zero-Padding
-    X = layers.ZeroPadding2D((3, 3))(X)
 
     # Stage 1
     img_height = input_shape[0]
@@ -143,14 +145,14 @@ def ResNet50(input_shape, num_classes):
 
     # Average Pooling
     # X = layers.AveragePooling2D(pool_size=(2, 2))(X)
-    X = layers.MaxPooling2D()(X)
+    X = layers.GlobalAveragePooling2D(name='avg_pool')(X)
 
     # Dropout layer to reduce overfitting
     X = layers.Dropout(0.3)(X)
 
     # Output layer
     X = layers.Flatten()(X)
-    X = layers.Dense(num_classes, activation='softmax')(X)
+    X = layers.Dense(num_classes, activation='softmax', name='fc' + str(num_classes))(X)
 
     # Create model
     model = models.Model(inputs=X_input, outputs=X, name='ResNet50')

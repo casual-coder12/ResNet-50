@@ -76,12 +76,12 @@ def main():
     else:
         raise ValueError("Invalid dataset name. Choose 'mnist', 'cifar10', or 'imagenette'.")
 
-    train_length = len(train_data)
-    total_steps = args.epochs * train_length
+    steps_per_epoch = len(train_data)
+    total_steps = args.epochs * steps_per_epoch
 
     # Instantiate model and trainer wrapper
     model = ResNet50(input_shape=input_shape, num_classes=10)
-    trainer = ResNetTrainer(model=model, learning_rate=args.learning_rate, optimizer='sgd', total_steps=total_steps)
+    trainer = ResNetTrainer(model=model, learning_rate=args.learning_rate, optimizer='sgd', steps_per_epoch=steps_per_epoch, epochs=args.epochs)
 
     # Train model
     history = trainer.train(train_data=train_data, val_data=val_data, epochs=args.epochs, dataset_name=args.dataset, save_type=args.save_type, load_checkpoint=args.load_checkpoint)

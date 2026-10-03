@@ -16,30 +16,41 @@ class ResNetTrainer:
     def __init__(
         self,
         model: tf.keras.Model,
-        learning_rate: float = 0.001,
+        learning_rate: float = 0.05,
         loss_fn=None,
         optimizer: str="adam",
-        total_steps: int = 10000
+        steps_per_epoch: int = 100,
+        epochs: int = 20
         ):
         """
         Initializes the trainer with model, optimizer, and loss function.
 
         Args:
             model (tf.keras.Model): The ResNet-50 model instance to be trained.
-            learning_rate (float): Learning rate for the optimizer. Default is 0.001.
+            learning_rate (float): Learning rate for the optimizer. Default is 0.05.
             loss_fn: Keras loss function instance. Defaults to CategoricalCrossentropy if None.
             optimizer: Keras optimizer instance. Defaults to Adam if None.
-            total_steps (int): Total number of training steps for the learning rate schedule.
+            steps_per_epoch (int): Number of steps in each epoch.
+            epochs (int): Number of training epochs.
         """
         self.model = model
         self.learning_rate = learning_rate
-        self.total_steps = total_steps
+
+        warmup_epochs = 3
+        total_steps = epochs * steps_per_epoch
+        warmup_steps = steps_per_epoch * warmup_epochs
 
         # Set default loss function to CategoricalCrossentropy (assuming one-hot encoded labels)
         self.loss_fn = loss_fn or losses.SparseCategoricalCrossentropy()
 
         if optimizer.lower() == "sgd":
-            lr_schedule = tf.keras.optimizers.schedules.CosineDecay(initial_learning_rate=self.learning_rate, decay_steps=total_steps, alpha=0.01)
+            lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+                initial_learning_rate=self.learning_rate, 
+                decay_steps=total_steps, 
+                alpha=0.001,
+                warmup_target=self.learning_rate,
+                warmup_steps=warmup_steps
+            )
             self.optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
         else:
             self.optimizer = optimizers.Adam(learning_rate=self.learning_rate)
@@ -101,7 +112,7 @@ class ResNetTrainer:
         elif load_checkpoint and not os.path.exists(path_to_save_checkpoint):
             print("No checkpoint found. Starting training from scratch.")
         else:
-            print(f"--- Starting ResNet-5 Training for {epochs} Epochs ---")
+            print(f"--- Starting ResNet-50 Training for {epochs} Epochs ---")
 
         self.history = self.model.fit(
             train_data,
@@ -163,7 +174,7 @@ class ResNetTrainer:
         Returns:
             dict: Evaluation metrics containing test loss and accuracy scores.
         """
-        print(f"--- Evaluating ResNet-5 on ({dataset_name}) Test Data ---")
+        print(f"--- Evaluating ResNet-50 on ({dataset_name}) Test Data ---")
         results = self.model.evaluate(test_data, return_dict=True)
         return results
 

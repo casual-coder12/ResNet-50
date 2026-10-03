@@ -50,7 +50,7 @@ def prepare_mnist_dataset(batch_size=32, buffer_size=10000):
 
     return train_dataset, val_dataset, test_dataset
 
-def prepare_cifar10_dataset(batch_size=32, buffer_size=10000):
+def prepare_cifar10_dataset(batch_size=64, buffer_size=10000):
     """
     Loads the CIFAR-10 dataset and prepares it for training and testing.
 
@@ -61,34 +61,45 @@ def prepare_cifar10_dataset(batch_size=32, buffer_size=10000):
     Returns:
         tuple: A tuple containing the training, validation, and test datasets.
     """
-    # (X_train, y_train), (X_test, y_test) = datasets.cifar10.load_data()
-
     dataset = load_dataset("uoft-cs/cifar10")
     
-    X_train = np.array(dataset['train']['img'])
+    X_train = np.array(dataset['train']['img'], dtype=np.uint8)
     y_train = np.array(dataset['train']['label'])
 
-    X_test = np.array(dataset['test']['img'])
+    X_test = np.array(dataset['test']['img'], dtype=np.uint8)
     y_test = np.array(dataset['test']['label'])
 
-    print("CIFAR-10 Shapes:", X_train.shape, y_train.shape, X_test.shape, y_test.shape)  # Debugging shapes
+    print("CIFAR-10 Raw Shapes:", X_train.shape, y_train.shape, X_test.shape, y_test.shape)  # Debugging shapes
 
-    X_train = X_train.astype('float32') / 255.0  # Normalize pixel values to [0, 1]
-    X_test = X_test.astype('float32') / 255.0  # Normalize pixel values to [0, 1]
-
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=42)
 
     train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
     val_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
     test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
 
-    train_dataset = train_dataset.shuffle(buffer_size=buffer_size).batch(batch_size)
-    val_dataset = val_dataset.batch(batch_size)
-    test_dataset = test_dataset.batch(batch_size)
+    train_dataset = train_dataset.shuffle(buffer_size=buffer_size)
+
+    def normalize_fn(image, label):
+        return tf.cast(image, tf.float32) / 255.0, label
+
+    train_dataset = train_dataset.map(
+        normalize_fn,
+        num_parallel_calls=tf.data.AUTOTUNE
+        ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    
+    val_dataset = val_dataset.map(
+        normalize_fn, 
+        num_parallel_calls=tf.data.AUTOTUNE
+        ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    
+    test_dataset = test_dataset.map(
+        normalize_fn, 
+        num_parallel_calls=tf.data.AUTOTUNE
+        ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return train_dataset, val_dataset, test_dataset
 
-def prepare_imagenette_dataset(batch_size=32, buffer_size=10000):
+def prepare_imagenette_dataset(batch_size=64, buffer_size=10000):
     """
     Loads the Imagenette dataset and prepares it for training and testing.
 
@@ -100,34 +111,44 @@ def prepare_imagenette_dataset(batch_size=32, buffer_size=10000):
         tuple: A tuple containing the training, validation, and test datasets.
     """
     dataset = load_dataset("frgfm/imagenette", "160px", trust_remote_code=True)
+    
     train_val = dataset["train"].train_test_split(test_size=0.1, seed=42)
     image_size = (160, 160)
 
-    def make_tf_dataset(split, shuffle=False):
-        images = np.stack([
-            np.asarray(
-                image.convert("RGB").resize(image_size),
-                dtype=np.uint8,
-            )
-            for image in split["image"]
-        ])
-        labels = np.asarray(split["label"], dtype=np.int32)
+    X_train = np.stack([np.asarray(img.convert("RGB").resize(image_size), dtype=np.uint8) for img in train_val["train"]["image"]])
+    y_train = np.asarray(train_val["train"]["label"], dtype=np.int32)
 
-        tf_dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-        if shuffle:
-            tf_dataset = tf_dataset.shuffle(
-                min(buffer_size, len(images)),
-                reshuffle_each_iteration=True,
-            )
+    X_val = np.stack([np.asarray(img.convert("RGB").resize(image_size), dtype=np.uint8) for img in train_val["test"]["image"]])
+    y_val = np.asarray(train_val["test"]["label"], dtype=np.int32)
 
-        return tf_dataset.map(
-            lambda image, label: (tf.cast(image, tf.float32) / 255.0, label),
-            num_parallel_calls=tf.data.AUTOTUNE,
-        ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    X_test = np.stack([np.asarray(img.convert("RGB").resize(image_size), dtype=np.uint8) for img in dataset["validation"]["image"]])
+    y_test = np.asarray(dataset["validation"]["label"], dtype=np.int32)
 
-    train_dataset = make_tf_dataset(train_val["train"], shuffle=True)
-    val_dataset = make_tf_dataset(train_val["test"])
-    test_dataset = make_tf_dataset(dataset["validation"])
+    print("Imagenette Processed Shapes:", X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+
+    train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    val_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
+    test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+
+    train_dataset = train_dataset.shuffle(buffer_size=min(buffer_size, len(X_train)))
+
+    def normalize_fn(image, label):
+        return tf.cast(image, tf.float32) / 255.0, label
+
+    train_dataset = train_dataset.map(
+        normalize_fn, 
+        num_parallel_calls=tf.data.AUTOTUNE
+    ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    val_dataset = val_dataset.map(
+        normalize_fn, 
+        num_parallel_calls=tf.data.AUTOTUNE
+    ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    test_dataset = test_dataset.map(
+        normalize_fn, 
+        num_parallel_calls=tf.data.AUTOTUNE
+    ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return train_dataset, val_dataset, test_dataset
 
