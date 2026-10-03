@@ -74,29 +74,24 @@ def ResNet50(input_shape, num_classes):
     # Resize the input to 128x128
     # X = layers.Resizing(128, 128)(X_input)
 
-    # if input_shape[0] >= 128:
-    #     data_augmentation = tf.keras.Sequential([
-    #         layers.RandomFlip("horizontal"),
-    #         layers.RandomRotation(0.05),
-    #         layers.RandomTranslation(0.05, 0.05),
-    #     ])
-    # else:
-    #     data_augmentation = tf.keras.Sequential([
-    #         layers.RandomCrop(32, 32),
-    #         layers.RandomFlip("horizontal"),
-    #         layers.RandomRotation(0.05),
-    #         layers.RandomTranslation(0.1, 0.1),
-    #     ])
+    img_height = input_shape[0]
 
-    data_augmentation = tf.keras.Sequential([
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.02),
-    ])
+    if img_height > 32:
+        data_augmentation = tf.keras.Sequential([
+            layers.RandomFlip("horizontal"),
+            layers.RandomRotation(0.02),
+            layers.RandomTranslation(0.05, 0.05),
+        ])
+    else:
+        data_augmentation = tf.keras.Sequential([
+            layers.RandomFlip("horizontal"),
+            layers.Resizing(40, 40), 
+            layers.RandomCrop(32, 32)
+        ])
 
     X = data_augmentation(X_input)
 
     # Stage 1
-    img_height = input_shape[0]
 
     # Case 1: Small images (e.g., MNIST, CIFAR-10)
     if img_height < 64:
