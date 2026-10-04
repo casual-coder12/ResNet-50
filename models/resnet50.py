@@ -92,7 +92,6 @@ def ResNet50(input_shape, num_classes):
     X = data_augmentation(X_input)
 
     # Stage 1
-
     # Case 1: Small images (e.g., MNIST, CIFAR-10)
     if img_height < 64:
         # 3x3 conv (stride 1) without MaxPool
@@ -146,7 +145,6 @@ def ResNet50(input_shape, num_classes):
     X = layers.Dropout(0.3)(X)
 
     # Output layer
-    X = layers.Flatten()(X)
     X = layers.Dense(num_classes, activation='softmax', name='fc' + str(num_classes))(X)
 
     # Create model

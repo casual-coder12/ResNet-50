@@ -21,6 +21,18 @@ CLASS_NAMES = {
         "ship",
         "truck",
     ],
+    "imagenette": [
+        "tench",
+        "English springer",
+        "cassette player",
+        "chain saw",
+        "church",
+        "French horn",
+        "garbage truck",
+        "gas pump",
+        "golf ball",
+        "parachute",
+    ],
 }
 
 def plot_training_history(history: tf.keras.callbacks.History, dataset_name: str):

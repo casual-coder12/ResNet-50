@@ -59,17 +59,13 @@ def main():
     print(f"=== Starting Training on {args.dataset.upper()} ===")
 
     # Set input dimensions according to dataset choice
-    if args.dataset == "mnist":
-        input_shape = (32, 32, 1)
-    elif args.dataset == "imagenette":
+    if args.dataset == "imagenette":
         input_shape = (160, 160, 3)
     else:
         input_shape = (32, 32, 3)
 
     # Get the appropriate dataset
-    if args.dataset == "mnist":
-        train_data, val_data, test_data = prepare_mnist_dataset(batch_size=args.batch_size)
-    elif args.dataset == "cifar10":
+    if args.dataset == "cifar10":
         train_data, val_data, test_data = prepare_cifar10_dataset(batch_size=args.batch_size)
     elif args.dataset == "imagenette":
         train_data, val_data, test_data = prepare_imagenette_dataset(batch_size=args.batch_size)

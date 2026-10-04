@@ -6,7 +6,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import losses, metrics, models
 
-from data.dataset import prepare_mnist_dataset, prepare_cifar10_dataset
+from data.dataset import prepare_cifar10_dataset, prepare_imagenette_dataset
 from models.resnet50 import ResNet50
 from models.model_loader import load_model
 from utils.trainer import ResNetTrainer
@@ -17,14 +17,14 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         type=str,
-        default="mnist",
-        choices=["mnist", "cifar10"],
+        default="cifar10",
+        choices=["cifar10", "imagenette"],
         help="Dataset name to evaluate on"
     )
     parser.add_argument(
         "--load_type",
         type=str,
-        default="w",
+        default="b",
         choices=["w", "m", "b"],
         help="Type of load operation: 'w' for weights, 'm' for entire model or 'b' for best model (default: w).",
         )
@@ -45,12 +45,12 @@ def evaluate():
     saved_models_dir = "saved_models"
     os.makedirs(outputs_dir, exist_ok=True)
     
-    if dataset_name == "mnist":
-        _, _, test_data = prepare_mnist_dataset(batch_size=64)
-        input_shape = (32, 32, 1)
-    elif dataset_name == "cifar10":
+    if dataset_name == "cifar10":
         _, _, test_data = prepare_cifar10_dataset(batch_size=64)
         input_shape = (32, 32, 3)
+    elif dataset_name == "imagenette":
+            _, _, test_data = prepare_imagenette_dataset(batch_size=64)
+            input_shape = (160, 160, 3)
     else:
         raise ValueError("Invalid dataset name. Choose 'mnist' or 'cifar10'.")
 

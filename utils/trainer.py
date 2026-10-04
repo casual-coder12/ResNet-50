@@ -114,6 +114,14 @@ class ResNetTrainer:
         else:
             print(f"--- Starting ResNet-50 Training for {epochs} Epochs ---")
 
+        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.5,  # Reduce learning rate by a factor of 0.5
+            patience=3,  # Wait for 3 epochs without improvement
+            min_lr=1e-6,  # Minimal allowed learning rate
+            verbose=1
+        )
+
         self.history = self.model.fit(
             train_data,
             validation_data=val_data,

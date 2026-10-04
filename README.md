@@ -130,7 +130,7 @@ Results for the current run can be viewed in the `ResNet50.ipynb` notebook. Imag
 | Dataset | Accuracy | Loss |
 |---|---|---|
 | CIFAR-10 | ~76% | ~0.73 |
-| Imagenette |  |  |
+| Imagenette | ~65.5% | ~1.08 |
 
 ## Generated Files
 
