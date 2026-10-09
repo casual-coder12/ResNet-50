@@ -1,6 +1,6 @@
-# ResNet-50 Image Classification
+# ResNet-50 from Scratch for Image Classification
 
-A TensorFlow/Keras implementation of ResNet-50 for image classification, with training and evaluation pipelines for MNIST and CIFAR-10.
+A TensorFlow/Keras full implementation of ResNet-50 for image classification, with training *from scratch* and evaluation pipelines for CIFAR-10 and Imagenette datasets.
 
 ## Overview
 
@@ -8,8 +8,8 @@ This project implements a 50-layer residual network using bottleneck blocks and 
 
 ## Features
 
-- **ResNet-50 architecture**: Bottleneck residual blocks with projection shortcuts where dimensions change.
-- **MNIST and CIFAR-10 support**: MNIST uses one input channel; CIFAR-10 uses three.
+- **Full ResNet-50 architecture**: Bottleneck residual blocks with projection shortcuts where dimensions change.
+- **MNIST, CIFAR-10 and Imagenette support**: MNIST uses one input channel; CIFAR-10 and Imagenette uses three.
 - **Resolution-dependent stem**: The model selects a different initial convolution and downsampling path based on the configured input height.
 - **Data augmentation**: Random crop, horizontal flip, rotation, and translation are included in the model.
 - **Optimizer options**: The trainer supports SGD with momentum and cosine learning-rate decay, or Adam. The current `train.py` configuration selects SGD; the two optimizers are alternatives, not used simultaneously.
