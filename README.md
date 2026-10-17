@@ -11,7 +11,7 @@ This project implements a 50-layer residual network using bottleneck blocks and 
 - **Full ResNet-50 architecture**: Bottleneck residual blocks with projection shortcuts where dimensions change.
 - **MNIST, CIFAR-10 and Imagenette support**: MNIST uses one input channel; CIFAR-10 and Imagenette uses three.
 - **Resolution-dependent stem**: The model selects a different initial convolution and downsampling path based on the configured input height.
-- **Data augmentation**: Random crop, horizontal flip, rotation, and translation are included in the model.
+- **Data augmentation**: Random crop, horizontal flip, rotation, and translation are selected in the model depending on the input image height.
 - **Optimizer options**: The trainer supports SGD with momentum and cosine learning-rate decay, or Adam. The current `train.py` configuration selects SGD; the two optimizers are alternatives, not used simultaneously.
 - **Training and evaluation utilities**: Validation, accuracy and top-5 accuracy metrics, best-validation-loss checkpoints, CSV history, and plots.
 - **Flexible saving**: Save model weights, the complete Keras model, or both.
@@ -37,20 +37,16 @@ The stem is selected using the image height in `input_shape`:
 
 After the residual stages, the current model applies max pooling, dropout, flattening, and a 10-class softmax output layer.
 
-### Input-size note
-
-The model currently applies `RandomCrop(32, 32)` before the resolution-dependent stem. Consequently, inputs larger than 32×32 are cropped to 32×32 before the convolutional layers, even though the stem is selected from the original `input_shape`. To preserve larger image resolutions, adjust the crop size or make cropping conditional on the input size.
-
 ## Data Augmentation
 
-The model includes the following Keras preprocessing layers:
+The model selects its Keras preprocessing layers using the configured input height (`input_shape[0]`):
 
-- Random crop to 32×32
-- Random horizontal flip
-- Random rotation with factor `0.05`
-- Random translation with factors `0.1` vertically and horizontally
+| Input height | Augmentation |
+|---|---|
+| 32 or less | Random horizontal flip, resize to 40×40, then random crop to 32×32 |
+| Above 32 | Random horizontal flip, random rotation (factor `0.02`), and random translation (factors `0.05` vertically and horizontally) |
 
-Keras preprocessing augmentation layers are active during training and are bypassed during inference. The same augmentation sequence is currently used for both MNIST and CIFAR-10.
+These layers augment inputs during training and are bypassed during inference. The small-image path always crops to 32×32; the larger-image path preserves the input dimensions.
 
 ## Installation
 
